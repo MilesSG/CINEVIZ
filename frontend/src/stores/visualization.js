@@ -23,12 +23,19 @@ export const useVisualizationStore = defineStore('visualization', () => {
         : '/api/visualization/box-office-trend'
       
       const response = await axios.get(url)
-      boxOfficeTrendData.value = response.data
-      selectedMovieId.value = movieId
+      
+      if (response.status === 200) {
+        boxOfficeTrendData.value = response.data
+        selectedMovieId.value = movieId
+      } else {
+        error.value = '获取票房走势数据失败'
+        console.error('API 返回非200状态码:', response.status)
+      }
       
       return boxOfficeTrendData.value
     } catch (err) {
       error.value = err.response?.data?.message || '获取票房走势数据失败'
+      console.error('获取票房走势数据出错:', err)
       return null
     } finally {
       loading.value = false
@@ -42,11 +49,18 @@ export const useVisualizationStore = defineStore('visualization', () => {
     
     try {
       const response = await axios.get('/api/visualization/genre-comparison')
-      genreComparisonData.value = response.data
+      
+      if (response.status === 200) {
+        genreComparisonData.value = response.data
+      } else {
+        error.value = '获取类型比较数据失败'
+        console.error('API 返回非200状态码:', response.status)
+      }
       
       return genreComparisonData.value
     } catch (err) {
       error.value = err.response?.data?.message || '获取类型比较数据失败'
+      console.error('获取类型比较数据出错:', err)
       return null
     } finally {
       loading.value = false
@@ -60,11 +74,18 @@ export const useVisualizationStore = defineStore('visualization', () => {
     
     try {
       const response = await axios.get('/api/visualization/release-heatmap')
-      releaseHeatmapData.value = response.data
+      
+      if (response.status === 200) {
+        releaseHeatmapData.value = response.data
+      } else {
+        error.value = '获取发行时间热力图数据失败'
+        console.error('API 返回非200状态码:', response.status)
+      }
       
       return releaseHeatmapData.value
     } catch (err) {
       error.value = err.response?.data?.message || '获取发行时间热力图数据失败'
+      console.error('获取发行时间热力图数据出错:', err)
       return null
     } finally {
       loading.value = false
@@ -78,11 +99,18 @@ export const useVisualizationStore = defineStore('visualization', () => {
     
     try {
       const response = await axios.get('/api/visualization/box-office-distribution')
-      boxOfficeDistributionData.value = response.data
+      
+      if (response.status === 200) {
+        boxOfficeDistributionData.value = response.data
+      } else {
+        error.value = '获取票房分布数据失败'
+        console.error('API 返回非200状态码:', response.status)
+      }
       
       return boxOfficeDistributionData.value
     } catch (err) {
       error.value = err.response?.data?.message || '获取票房分布数据失败'
+      console.error('获取票房分布数据出错:', err)
       return null
     } finally {
       loading.value = false
@@ -96,12 +124,38 @@ export const useVisualizationStore = defineStore('visualization', () => {
   
   // 初始化所有数据
   async function initAllData() {
-    await Promise.all([
-      fetchBoxOfficeTrend(),
-      fetchGenreComparison(),
-      fetchReleaseHeatmap(),
-      fetchBoxOfficeDistribution()
-    ])
+    loading.value = true;
+    error.value = null;
+    
+    try {
+      // 使用Promise.allSettled确保即使某些请求失败，其他请求仍然能够继续
+      const results = await Promise.allSettled([
+        fetchBoxOfficeTrend(),
+        fetchGenreComparison(),
+        fetchReleaseHeatmap(),
+        fetchBoxOfficeDistribution()
+      ]);
+      
+      // 检查各个请求的结果
+      const failedRequests = results.filter(result => result.status === 'rejected');
+      if (failedRequests.length > 0) {
+        console.warn(`${failedRequests.length} 个数据请求失败`);
+        failedRequests.forEach(failure => console.error(failure.reason));
+      }
+      
+      return {
+        boxOfficeTrend: results[0].status === 'fulfilled' ? results[0].value : null,
+        genreComparison: results[1].status === 'fulfilled' ? results[1].value : null,
+        releaseHeatmap: results[2].status === 'fulfilled' ? results[2].value : null,
+        boxOfficeDistribution: results[3].status === 'fulfilled' ? results[3].value : null
+      };
+    } catch (err) {
+      error.value = '初始化数据失败';
+      console.error('初始化数据出错:', err);
+      return null;
+    } finally {
+      loading.value = false;
+    }
   }
   
   return {
