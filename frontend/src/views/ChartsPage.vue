@@ -165,7 +165,7 @@ const formatBoxOffice = (value) => {
 // 重新加载所有数据
 const reloadAllData = async () => {
   try {
-    await visualizationStore.initAllData()
+    await visualizationStore.initAllData(selectedMovieId.value)
     
     // 获取电影列表（用于选择器）
     if (moviesStore.movies.length === 0) {
@@ -834,11 +834,30 @@ const initBoxOfficeDistributionChart = () => {
 // 更新票房走势数据
 const updateBoxOfficeTrend = async () => {
   try {
+    // 更新所有可视化数据，而不仅仅是票房走势
     await visualizationStore.fetchBoxOfficeTrend(selectedMovieId.value || null)
+    
+    // 如果有选择电影ID，也更新其他三个图表的数据
+    if (selectedMovieId.value) {
+      await Promise.all([
+        visualizationStore.fetchGenreComparison(selectedMovieId.value),
+        visualizationStore.fetchReleaseHeatmap(selectedMovieId.value),
+        visualizationStore.fetchBoxOfficeDistribution(selectedMovieId.value)
+      ])
+    } else {
+      // 如果没有选择电影ID（即选择"所有电影"），则加载所有默认数据
+      await Promise.all([
+        visualizationStore.fetchGenreComparison(),
+        visualizationStore.fetchReleaseHeatmap(),
+        visualizationStore.fetchBoxOfficeDistribution()
+      ])
+    }
+    
     await nextTick()
-    initBoxOfficeTrendChart()
+    // 更新所有图表
+    initAllCharts()
   } catch (error) {
-    console.error('更新票房走势数据出错:', error)
+    console.error('更新可视化数据出错:', error)
   }
 }
 
@@ -858,7 +877,7 @@ watch(() => visualizationStore.boxOfficeDistributionData, () => nextTick(() => i
 
 onMounted(async () => {
   // 初始化所有数据
-  await visualizationStore.initAllData()
+  await visualizationStore.initAllData(selectedMovieId.value)
   
   // 获取电影列表（用于选择器）
   if (moviesStore.movies.length === 0) {

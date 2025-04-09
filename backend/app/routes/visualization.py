@@ -50,6 +50,29 @@ def box_office_trend():
 @visualization_bp.route('/genre-comparison', methods=['GET'])
 def genre_comparison():
     """获取不同类型电影的票房比较数据"""
+    movie_id = request.args.get('movie_id')
+    
+    # 如果指定了电影ID，则只返回该电影的类型数据
+    if movie_id:
+        movie = Movie.get_by_id(movie_id)
+        if not movie:
+            return jsonify({'message': '电影不存在'}), 404
+        
+        # 针对单部电影，只返回其类型的数据
+        genres = movie.genres
+        # 每个类型的票房都是该电影的票房
+        total_box_offices = [movie.box_office] * len(genres)
+        avg_box_offices = [movie.box_office] * len(genres)
+        counts = [1] * len(genres)
+        
+        return jsonify({
+            'genres': genres,
+            'total_box_offices': total_box_offices,
+            'avg_box_offices': avg_box_offices,
+            'counts': counts
+        }), 200
+    
+    # 如果没有指定电影ID，则获取所有电影的类型比较数据
     movies = Movie.get_all_movies()
     
     # 统计每种类型的总票房和电影数量
@@ -87,6 +110,29 @@ def genre_comparison():
 @visualization_bp.route('/release-heatmap', methods=['GET'])
 def release_heatmap():
     """获取电影发行时间热力图数据"""
+    movie_id = request.args.get('movie_id')
+    
+    # 如果指定了电影ID，则只返回该电影的发行时间数据
+    if movie_id:
+        movie = Movie.get_by_id(movie_id)
+        if not movie:
+            return jsonify({'message': '电影不存在'}), 404
+        
+        try:
+            release_date = datetime.strptime(movie.release_date, '%Y-%m-%d')
+            data = [{
+                'month': release_date.month,
+                'day': release_date.day,
+                'count': 1
+            }]
+            
+            return jsonify({
+                'data': data
+            }), 200
+        except ValueError:
+            return jsonify({'message': '电影发行日期格式不正确'}), 400
+    
+    # 如果没有指定电影ID，则获取所有电影的发行时间热力图数据
     movies = Movie.get_all_movies()
     
     # 提取每部电影的上映月份和日期
@@ -128,6 +174,34 @@ def release_heatmap():
 @visualization_bp.route('/box-office-distribution', methods=['GET'])
 def box_office_distribution():
     """获取票房分布数据"""
+    movie_id = request.args.get('movie_id')
+    
+    # 如果指定了电影ID，则只返回该电影的票房分布数据
+    if movie_id:
+        movie = Movie.get_by_id(movie_id)
+        if not movie:
+            return jsonify({'message': '电影不存在'}), 404
+        
+        # 对于单部电影，我们创建一个只包含该电影票房的分布
+        box_office = movie.box_office
+        
+        # 创建一个区间，使电影票房正好在中间
+        lower = max(0, box_office - 10000000)  # 假设向下偏移1000万
+        upper = box_office + 10000000  # 向上偏移1000万
+        
+        intervals = [f"{int(lower)}-{int(upper)}"]
+        counts = [1]
+        
+        return jsonify({
+            'intervals': intervals,
+            'counts': counts,
+            'movies': {
+                'titles': [movie.title],
+                'box_offices': [box_office]
+            }
+        }), 200
+    
+    # 如果没有指定电影ID，则获取所有电影的票房分布数据
     movies = Movie.get_all_movies()
     
     # 提取票房数据

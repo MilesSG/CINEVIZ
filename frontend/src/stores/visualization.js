@@ -43,12 +43,16 @@ export const useVisualizationStore = defineStore('visualization', () => {
   }
   
   // 加载类型比较数据
-  async function fetchGenreComparison() {
+  async function fetchGenreComparison(movieId = null) {
     loading.value = true
     error.value = null
     
     try {
-      const response = await axios.get('/api/visualization/genre-comparison')
+      const url = movieId 
+        ? `/api/visualization/genre-comparison?movie_id=${movieId}`
+        : '/api/visualization/genre-comparison'
+      
+      const response = await axios.get(url)
       
       if (response.status === 200) {
         genreComparisonData.value = response.data
@@ -68,12 +72,16 @@ export const useVisualizationStore = defineStore('visualization', () => {
   }
   
   // 加载发行时间热力图数据
-  async function fetchReleaseHeatmap() {
+  async function fetchReleaseHeatmap(movieId = null) {
     loading.value = true
     error.value = null
     
     try {
-      const response = await axios.get('/api/visualization/release-heatmap')
+      const url = movieId 
+        ? `/api/visualization/release-heatmap?movie_id=${movieId}`
+        : '/api/visualization/release-heatmap'
+      
+      const response = await axios.get(url)
       
       if (response.status === 200) {
         releaseHeatmapData.value = response.data
@@ -93,12 +101,16 @@ export const useVisualizationStore = defineStore('visualization', () => {
   }
   
   // 加载票房分布数据
-  async function fetchBoxOfficeDistribution() {
+  async function fetchBoxOfficeDistribution(movieId = null) {
     loading.value = true
     error.value = null
     
     try {
-      const response = await axios.get('/api/visualization/box-office-distribution')
+      const url = movieId 
+        ? `/api/visualization/box-office-distribution?movie_id=${movieId}`
+        : '/api/visualization/box-office-distribution'
+      
+      const response = await axios.get(url)
       
       if (response.status === 200) {
         boxOfficeDistributionData.value = response.data
@@ -123,17 +135,20 @@ export const useVisualizationStore = defineStore('visualization', () => {
   }
   
   // 初始化所有数据
-  async function initAllData() {
+  async function initAllData(movieId = null) {
     loading.value = true;
     error.value = null;
+    
+    // 使用传入的 movieId 或存储当前选中的 movieId
+    const currentMovieId = movieId !== null ? movieId : selectedMovieId.value;
     
     try {
       // 使用Promise.allSettled确保即使某些请求失败，其他请求仍然能够继续
       const results = await Promise.allSettled([
-        fetchBoxOfficeTrend(),
-        fetchGenreComparison(),
-        fetchReleaseHeatmap(),
-        fetchBoxOfficeDistribution()
+        fetchBoxOfficeTrend(currentMovieId),
+        fetchGenreComparison(currentMovieId),
+        fetchReleaseHeatmap(currentMovieId),
+        fetchBoxOfficeDistribution(currentMovieId)
       ]);
       
       // 检查各个请求的结果
