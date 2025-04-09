@@ -51,7 +51,7 @@ source venv/bin/activate
 # 安装依赖
 pip install -r requirements.txt
 
-# 创建示例数据（首次运行时需要）
+# 创建数据（首次运行时需要）
 python create_sample_data.py
 
 # 运行服务器（必须在backend目录下运行）
