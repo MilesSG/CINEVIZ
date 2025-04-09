@@ -2,7 +2,6 @@
 
 CineViz是一个基于Python和Vue.js的影视票房数据可视化系统，提供电影数据采集、存储、分析和展示功能，支持用户管理、数据可视化和管理员后台等多种功能。
 
-
 ![系统运行截图](frontend/imgs/image.png)
 
 ## ✨ 功能特点
@@ -52,7 +51,7 @@ source venv/bin/activate
 # 安装依赖
 pip install -r requirements.txt
 
-# 创建数据（首次运行时需要）
+# 创建示例数据（首次运行时需要）
 python create_sample_data.py
 
 # 运行服务器（必须在backend目录下运行）
